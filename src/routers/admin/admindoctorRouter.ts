@@ -118,12 +118,7 @@ async function updatedoctorHandler(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    if (
-      !updatedData.name ||
-      !updatedData.email ||
-      !updatedData.mobile ||
-      !updatedData.specialization
-    ) {
+    if (!updatedData.name || !updatedData.email || !updatedData.mobile) {
       errorResponse(res, 400, "Some params are missing");
       return;
     }
