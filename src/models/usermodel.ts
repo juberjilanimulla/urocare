@@ -41,7 +41,7 @@ function currentLocalTimePlusOffset(): Date {
   return new Date(now.getTime() + offset);
 }
 
-// 
+//
 userschema.pre<IUser>("save", function (next) {
   const currentTime = currentLocalTimePlusOffset();
   this.createdAt = currentTime;
@@ -49,13 +49,12 @@ userschema.pre<IUser>("save", function (next) {
   next();
 });
 
-
 userschema.pre("findOneAndUpdate", function (next) {
   const currentTime = currentLocalTimePlusOffset();
   this.set({ updatedAt: currentTime });
   next();
 });
 
-// 
+//
 const usermodel = model<IUser>("user", userschema);
 export default usermodel;
