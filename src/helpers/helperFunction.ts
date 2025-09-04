@@ -93,7 +93,7 @@ export function bcryptPassword(password: string): string {
 export function comparePassword(
   password: string,
   hashedPassword: string
-): boolean {
+): Boolean {
   return bcrypt.compareSync(password, hashedPassword);
 }
 
@@ -131,7 +131,7 @@ export async function Admin(): Promise<void> {
         email,
         role: "admin",
         mobile: 9966470788,
-        password: bcryptPassword("Drkhizarraoof0832#*"),
+        password: bcryptPassword("Urocare0832#*"),
       });
     }
   }

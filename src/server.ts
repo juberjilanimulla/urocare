@@ -1,23 +1,86 @@
-import express, { Application, Request, Response } from "express";
-import mongoose from "mongoose";
+import express, { Request, Response, NextFunction } from "express";
+import { Admin } from "./helpers/helperFunction";
+import morgan from "morgan";
 import cors from "cors";
+import bodyParser from "body-parser";
+import authRouter from "./routers/auth/authRouter";
 import dbConnect from "./config/db";
+import config from "./config/config";
 
-const app: Application = express();
-const port = process.env.PORT || 5000;
+const app = express();
+const port = config.PORT || 5000;
 
-app.use(express.json());
-
-app.get("/", (req: Request, res: Response) => {
-  res.send("file checking");
+// Configure morgan custom tokens
+morgan.token("remote-addr", function (req: Request) {
+  return (
+    (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || ""
+  );
 });
 
+morgan.token("url", (req: Request) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  return req.originalUrl || url.pathname;
+});
+
+app.use(
+  morgan(
+    ":remote-addr :method :url :status :res[content-length] - :response-time ms"
+  )
+);
+
+// middleware
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ extended: true, limit: "100mb" }));
+
+app.use(
+  cors({
+    origin: [
+      "https://drkhizarraoof.com",
+      "https://drkhizarraoof.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+    ],
+    credentials: true,
+  })
+);
+
+// JSON error handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (
+    err instanceof SyntaxError &&
+    "status" in err &&
+    err.status === 400 &&
+    "body" in err
+  ) {
+    return res.status(400).json({ error: "Invalid JSON input" });
+  }
+  next(err);
+});
+
+// Default error handler
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: "Internal server error" });
+});
+
+// routes
+app.use("/api/auth", authRouter);
+
+// database connection
 dbConnect()
   .then(() => {
+    Admin();
     app.listen(port, () => {
-      console.log(`server is listening at ${port}`);
+      console.log(`Server listening at port ${port}`);
     });
   })
   .catch((error) => {
-    console.log("unable to connected to server", error);
+    console.error("Unable to connect to server", error);
   });
+
+export default app;
