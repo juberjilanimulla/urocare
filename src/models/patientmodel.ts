@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IReferralDoctor {
   name?: string;
@@ -77,8 +77,5 @@ patientSchema.pre("findOneAndUpdate", function (next) {
   next();
 });
 
-const patientmodel: Model<IPatient> = mongoose.model<IPatient>(
-  "patient",
-  patientSchema
-);
+const patientmodel = mongoose.model<IPatient>("patient", patientSchema);
 export default patientmodel;

@@ -12,7 +12,7 @@ export interface IAppointment extends Document {
   endtime: string;
   slottype: "online" | "offline";
   status: "pending" | "confirmed" | "cancelled";
-  paymentStatus: "unpaid" | "paid";
+  paymentstatus: "unpaid" | "paid";
   price: { type: number; default: 700 };
   createdAt?: Date;
   updatedAt?: Date;
@@ -35,7 +35,7 @@ const appointmentschema = new Schema<IAppointment>(
       enum: ["pending", "confirmed", "cancelled"],
       default: "pending",
     },
-    paymentStatus: {
+    paymentstatus: {
       type: String,
       enum: ["unpaid", "paid"],
       default: "unpaid",

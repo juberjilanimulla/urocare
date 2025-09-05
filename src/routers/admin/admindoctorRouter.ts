@@ -64,7 +64,7 @@ async function getalldoctorHandler(req: Request, res: Response): Promise<void> {
           }, {})
         : { createdAt: -1 };
 
-    const doctors: IDoctor[] = await doctormodel
+    const doctor: IDoctor[] = await doctormodel
       .find(query)
       .sort(sortBy)
       .skip(skip)
@@ -73,7 +73,7 @@ async function getalldoctorHandler(req: Request, res: Response): Promise<void> {
     const totalCount = await doctormodel.countDocuments(query);
     const totalPages = Math.ceil(totalCount / limit);
 
-    successResponse(res, "Success", { doctors, totalPages });
+    successResponse(res, "Success", { doctor, totalPages });
   } catch (error) {
     console.error("error", error);
     errorResponse(res, 500, "internal server error");

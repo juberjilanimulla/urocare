@@ -79,7 +79,7 @@ async function createappointmentHandler(req: Request, res: Response) {
       slottype,
       price: price || 700,
       status: "pending",
-      paymentStatus: "unpaid",
+      paymentstatus: "unpaid",
     });
 
     successResponse(res, "Appointment created", appointment);

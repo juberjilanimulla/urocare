@@ -40,6 +40,8 @@ app.use(express.urlencoded({ extended: true, limit: "100mb" }));
 app.use(
   cors({
     origin: [
+      "https://raoofsurocare.vercel.app",
+      
       "https://drkhizarraoof.com",
       "https://drkhizarraoof.vercel.app",
       "http://localhost:3000",
