@@ -13,7 +13,7 @@ export interface IAppointment extends Document {
   slottype: "online" | "offline";
   status: "pending" | "confirmed" | "cancelled";
   paymentStatus: "unpaid" | "paid";
-  price: number;
+  price: { type: number; default: 700 };
   createdAt?: Date;
   updatedAt?: Date;
 }

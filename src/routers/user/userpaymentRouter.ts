@@ -93,7 +93,7 @@ async function verifypaymentHandler(req: Request, res: Response) {
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET as string)
       .update(orderid + "|" + paymentid)
       .digest("hex");
-
+    console.log("generatedSignature", generatedSignature);
     if (generatedSignature !== signature) {
       return errorResponse(res, 400, "Invalid payment signature");
     }

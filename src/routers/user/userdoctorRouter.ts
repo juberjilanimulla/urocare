@@ -4,7 +4,7 @@ import doctormodel from "../../models/doctormodel";
 
 const userdoctorRouter = Router();
 
-userdoctorRouter.get("/", getalldoctorHandler);
+userdoctorRouter.get("/getall", getalldoctorHandler);
 
 export default userdoctorRouter;
 

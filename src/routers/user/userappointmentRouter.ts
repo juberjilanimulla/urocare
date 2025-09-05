@@ -77,7 +77,7 @@ async function createappointmentHandler(req: Request, res: Response) {
       starttime: starttime.trim(),
       endtime: endtime.trim(),
       slottype,
-      price: price || 0,
+      price: price || 700,
       status: "pending",
       paymentStatus: "unpaid",
     });
