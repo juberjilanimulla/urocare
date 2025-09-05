@@ -7,6 +7,7 @@ import authRouter from "./routers/auth/authRouter";
 import dbConnect from "./config/db";
 import config from "./config/config";
 import adminRouter from "./routers/admin/adminRouter";
+import userRouter from "./routers/user/userRouter";
 
 const app = express();
 const port = config.PORT || 5000;
@@ -72,6 +73,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 // routes
 app.use("/api/auth", authRouter);
 app.use("/api/admin", adminRouter);
+app.use("/api/user", userRouter);
 
 // database connection
 dbConnect()

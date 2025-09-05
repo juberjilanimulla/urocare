@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import crypto from "crypto";
-import Razorpay,{ type OrderCreateRequestBody } from "razorpay";
+import Razorpay from "razorpay";
 import {
   successResponse,
   errorResponse,
@@ -10,7 +10,6 @@ import paymentmodel, { IPayment } from "../../models/paymentmodel";
 
 const userpaymentRouter = Router();
 
-// ---------------- Razorpay Instance ---------------- //
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID as string,
   key_secret: process.env.RAZORPAY_KEY_SECRET as string,
@@ -48,7 +47,7 @@ async function createorderHandler(req: Request, res: Response) {
     }
 
     // Create Razorpay order
-    const options: OrderCreateRequestBody = {
+    const options = {
       amount: amount * 100, // amount in paise
       currency: "INR",
       receipt: `receipt_${appointmentid}`,
@@ -75,7 +74,6 @@ async function createorderHandler(req: Request, res: Response) {
     errorResponse(res, 500, "Internal server error");
   }
 }
-
 
 async function verifypaymentHandler(req: Request, res: Response) {
   try {
