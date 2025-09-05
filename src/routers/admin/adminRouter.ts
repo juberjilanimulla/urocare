@@ -4,6 +4,7 @@ import adminpaymentRouter from "./adminpaymentRouter";
 import adminslotbookingRouter from "./adminslotbookingRouter";
 import admindoctorRouter from "./admindoctorRouter";
 import adminprivacypolicyRouter from "./adminprivacypolicyRouter";
+import adminpatientRouter from "./adminpatientRouter";
 
 const adminRouter = Router();
 
@@ -12,5 +13,6 @@ adminRouter.use("/payment", adminpaymentRouter);
 adminRouter.use("/slotbooking", adminslotbookingRouter);
 adminRouter.use("/doctor", admindoctorRouter);
 adminRouter.use("/privacypolicy", adminprivacypolicyRouter);
+adminRouter.use("/patient", adminpatientRouter);
 
 export default adminRouter;
