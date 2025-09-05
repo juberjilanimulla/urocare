@@ -1,0 +1,126 @@
+import { Router, Request, Response } from "express";
+import crypto from "crypto";
+import Razorpay,{ type OrderCreateRequestBody } from "razorpay";
+import {
+  successResponse,
+  errorResponse,
+} from "../../helpers/serverResponse.js";
+import appointmentmodel, { IAppointment } from "../../models/appointmentmodel";
+import paymentmodel, { IPayment } from "../../models/paymentmodel";
+
+const userpaymentRouter = Router();
+
+// ---------------- Razorpay Instance ---------------- //
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID as string,
+  key_secret: process.env.RAZORPAY_KEY_SECRET as string,
+});
+
+userpaymentRouter.post("/order", createorderHandler);
+userpaymentRouter.post("/verify", verifypaymentHandler);
+
+export default userpaymentRouter;
+
+interface RazorpayOrderRequest {
+  amount: number;
+  currency: string;
+  receipt: string;
+  notes?: Record<string, string>;
+}
+
+async function createorderHandler(req: Request, res: Response) {
+  try {
+    const { appointmentid, amount } = req.body as {
+      appointmentid?: string;
+      amount?: number;
+    };
+
+    if (!appointmentid || !amount) {
+      return errorResponse(res, 400, "appointmentid and amount are required");
+    }
+
+    const appointment: IAppointment | null = await appointmentmodel.findById(
+      appointmentid
+    );
+
+    if (!appointment) {
+      return errorResponse(res, 404, "appointment not found");
+    }
+
+    // Create Razorpay order
+    const options: OrderCreateRequestBody = {
+      amount: amount * 100, // amount in paise
+      currency: "INR",
+      receipt: `receipt_${appointmentid}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    // Save payment record
+    const payment: IPayment = await paymentmodel.create({
+      appointmentid: appointmentid,
+      doctorid: appointment.doctorid,
+      amount,
+      orderid: order.id,
+      paymentstatus: "created",
+    });
+
+    successResponse(res, "Order created", {
+      orderId: order.id,
+      amount: order.amount,
+      paymentid: payment._id,
+    });
+  } catch (error) {
+    console.error(error);
+    errorResponse(res, 500, "Internal server error");
+  }
+}
+
+
+async function verifypaymentHandler(req: Request, res: Response) {
+  try {
+    const { appointmentid, orderid, paymentid, signature } = req.body as {
+      appointmentid?: string;
+      orderid?: string;
+      paymentid?: string;
+      signature?: string;
+    };
+
+    if (!appointmentid || !orderid || !paymentid || !signature) {
+      return errorResponse(res, 400, "Missing payment verification params");
+    }
+
+    // Verify signature
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET as string)
+      .update(orderid + "|" + paymentid)
+      .digest("hex");
+
+    if (generatedSignature !== signature) {
+      return errorResponse(res, 400, "Invalid payment signature");
+    }
+
+    // Update appointment
+    await appointmentmodel.findByIdAndUpdate(appointmentid, {
+      status: "confirmed",
+      paymentstatus: "paid",
+    });
+
+    // Update payment
+    const payment = await paymentmodel.findOneAndUpdate(
+      { orderid },
+      {
+        paymentid,
+        signature,
+        paymentstatus: "paid",
+        paidAt: new Date(),
+      },
+      { new: true }
+    );
+
+    successResponse(res, "Payment verified successfully", payment);
+  } catch (error) {
+    console.error(error);
+    errorResponse(res, 500, "Internal server error");
+  }
+}
