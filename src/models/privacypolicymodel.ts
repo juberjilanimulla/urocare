@@ -1,11 +1,13 @@
-import { Schema, model, Document } from "mongoose";
+import { Document, Schema, model, Types } from "mongoose";
 
 export interface IPrivacyPolicyItem {
-  title?: string;
-  value?: string;
+  _id: Types.ObjectId; // <-- Add this
+  title: string;
+  value: string;
 }
 
 export interface IPrivacyPolicySection {
+  _id: Types.ObjectId; // <-- Add this
   section: string;
   items: IPrivacyPolicyItem[];
 }
@@ -16,27 +18,25 @@ export interface IPrivacyPolicy extends Document {
   updatedAt?: Date;
 }
 
+const privacyPolicyItemSchema = new Schema<IPrivacyPolicyItem>({
+  title: { type: String },
+  value: { type: String },
+});
+
+const privacyPolicySectionSchema = new Schema<IPrivacyPolicySection>({
+  section: { type: String, required: true },
+  items: [privacyPolicyItemSchema],
+});
+
 const privacypolicySchema = new Schema<IPrivacyPolicy>(
   {
-    privacypolicy: [
-      {
-        section: {
-          type: String,
-          required: true,
-        },
-        items: [
-          {
-            title: { type: String },
-            value: { type: String },
-          },
-        ],
-      },
-    ],
+    privacypolicy: [privacyPolicySectionSchema],
   },
   { timestamps: true, versionKey: false }
 );
 
-function currentLocalTimePlusOffset(): Date {
+// Time adjustment hooks
+function currentLocalTimePlusOffset() {
   const now = new Date();
   const offset = 5.5 * 60 * 60 * 1000;
   return new Date(now.getTime() + offset);
