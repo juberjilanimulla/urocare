@@ -3,7 +3,15 @@ import patientmodel, { IPatient } from "../../models/patientmodel";
 import { successResponse, errorResponse } from "../../helpers/serverResponse";
 import { SortOrder, Mongoose } from "mongoose";
 import adminpatientimageRouter from "./adminuploadipatientmageRouter";
+import { S3Client, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
+const s3 = new S3Client({
+  region: process.env.AWS_REGION as string,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+  },
+});
 const adminpatientRouter = Router();
 
 adminpatientRouter.post("/getall", getallpatientHandler);
@@ -11,6 +19,7 @@ adminpatientRouter.post("/create", createpatientHandler);
 adminpatientRouter.put("/update/:id", updatepatientHandler);
 adminpatientRouter.delete("/delete", deletepatientHandler);
 adminpatientRouter.use("/upload", adminpatientimageRouter);
+adminpatientRouter.delete("/singleimage", singleimagedeleteHandler);
 
 export default adminpatientRouter;
 
@@ -221,22 +230,66 @@ async function updatepatientHandler(req: Request, res: Response) {
 async function deletepatientHandler(req: Request, res: Response) {
   try {
     const { _id } = req.body;
-
     if (!_id) {
-      errorResponse(res, 400, "some params are missing");
-      return;
+      return errorResponse(res, 400, "patient ID (_id) is required");
     }
 
-    const checkexist = await patientmodel.findById(_id);
-    if (!checkexist) {
-      errorResponse(res, 404, "patient not found in database");
-      return;
+    // Find property before deletion (to access images)
+    const patient = await patientmodel.findById(_id);
+    if (!patient) {
+      return errorResponse(res, 404, "patient not found");
     }
 
-    const patient = await patientmodel.findByIdAndDelete(_id);
+    // Delete all images from S3
+    const s3Key = patient.image?.split(".amazonaws.com/")[1];
 
-    successResponse(res, "successfully deleted");
+    if (s3Key) {
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.AWS_BUCKET_NAME,
+          Key: s3Key,
+        })
+      );
+    }
+
+    // Delete patient from DB
+    await patientmodel.findByIdAndDelete(_id);
+
+    return successResponse(res, "patient and associated images deleted");
   } catch (error) {
     console.log("error", error);
+  }
+}
+
+async function singleimagedeleteHandler(req: Request, res: Response) {
+  try {
+    const { _id } = req.body;
+    if (!_id) {
+      return errorResponse(res, 400, "patient ID (_id) is required");
+    }
+
+    const patient = await patientmodel.findById(_id);
+    if (!patient) {
+      return errorResponse(res, 404, "patient not found");
+    }
+
+    const imageUrl = patient.image;
+    const s3Key = imageUrl?.split(".amazonaws.com/")[1];
+
+    if (s3Key) {
+      const deleteCommand = new DeleteObjectCommand({
+        Bucket: process.env.AWS_BUCKET_NAME,
+        Key: s3Key,
+      });
+      await s3.send(deleteCommand);
+    }
+
+    patient.image = ""; // Clear image reference from DB
+    await patient.save();
+
+    return successResponse(res, "patient image deleted successfully", patient);
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
   }
 }

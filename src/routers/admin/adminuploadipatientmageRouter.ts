@@ -2,8 +2,6 @@ import { Router, Request, Response } from "express";
 import multer from "multer";
 import fs, { createReadStream } from "fs";
 import path from "path";
-// import { fileURLToPath } from "url";
-import { dirname } from "path";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import {
   successResponse,
