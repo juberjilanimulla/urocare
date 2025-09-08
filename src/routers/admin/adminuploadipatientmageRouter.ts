@@ -11,10 +11,6 @@ import {
 } from "../../helpers/serverResponse.js";
 import patientmodel from "../../models/patientmodel.js";
 
-// const __filename = fileURLToPath(import.meta.url);
-
-const __dirname = dirname(__filename);
-
 // AWS S3 v3 Setup
 const s3 = new S3Client({
   region: process.env.AWS_REGION as string,
