@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import patientmodel, { IPatient } from "../../models/patientmodel";
 import { successResponse, errorResponse } from "../../helpers/serverResponse";
 import { SortOrder, Mongoose } from "mongoose";
+import adminpatientimageRouter from "./adminuploadipatientmageRouter";
 
 const adminpatientRouter = Router();
 
@@ -9,6 +10,7 @@ adminpatientRouter.post("/getall", getallpatientHandler);
 adminpatientRouter.post("/create", createpatientHandler);
 adminpatientRouter.put("/update/:id", updatepatientHandler);
 adminpatientRouter.delete("/delete", deletepatientHandler);
+adminpatientRouter.use("/upload", adminpatientimageRouter);
 
 export default adminpatientRouter;
 
