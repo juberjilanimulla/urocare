@@ -2,11 +2,18 @@ import { Router, Request, Response } from "express";
 import multer from "multer";
 import fs, { createReadStream } from "fs";
 import path from "path";
+// import { fileURLToPath } from "url";
+import { dirname } from "path";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { successResponse, errorResponse } from "../../helpers/serverResponse.js";
+import {
+  successResponse,
+  errorResponse,
+} from "../../helpers/serverResponse.js";
 import patientmodel from "../../models/patientmodel.js";
 
-const __dirname = path.resolve(); // works in CommonJS build
+// const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = dirname(__filename);
 
 // AWS S3 v3 Setup
 const s3 = new S3Client({
@@ -17,10 +24,10 @@ const s3 = new S3Client({
   },
 });
 
-// Multer setup: store in temp folder before sending to S3
+// Multer Setup (store temporarily in /temp before sending to S3)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "temp");
+    const uploadPath = path.join(__dirname, "../../temp");
     fs.mkdirSync(uploadPath, { recursive: true });
     cb(null, uploadPath);
   },
@@ -37,13 +44,13 @@ const upload = multer({
     if (isImage) cb(null, true);
     else cb(new Error("Only image files are allowed"));
   },
-}).single("patientimage"); // field name in form-data
+}).single("patientimage"); // Accept only one image
 
 const adminpatientimageRouter = Router();
 
-// Upload Patient Image and Save to S3
+// 📌 Upload Patient Image and Save to S3
 adminpatientimageRouter.post("/:id", (req: Request, res: Response) => {
-  upload(req, res, async (err: any) => {
+  upload(req, res, async (err) => {
     if (err) return errorResponse(res, 400, err.message || "Upload error");
     if (!req.file) return errorResponse(res, 400, "No file uploaded");
 
@@ -55,7 +62,9 @@ adminpatientimageRouter.post("/:id", (req: Request, res: Response) => {
       }
 
       const fileStream = createReadStream(req.file.path);
-      const fileName = `${req.params.id}-${Date.now()}${path.extname(req.file.originalname)}`;
+      const fileName = `${req.params.id}-${Date.now()}${path.extname(
+        req.file.originalname
+      )}`;
       const s3Key = `patientimages/${fileName}`;
 
       const uploadCommand = new PutObjectCommand({
@@ -71,9 +80,13 @@ adminpatientimageRouter.post("/:id", (req: Request, res: Response) => {
       patient.image = imageUrl;
 
       await patient.save();
-      fs.unlinkSync(req.file.path); // delete local temp file
+      fs.unlinkSync(req.file.path); // Delete temp file
 
-      return successResponse(res, "Patient image uploaded successfully", patient);
+      return successResponse(
+        res,
+        "Patient image uploaded successfully",
+        patient
+      );
     } catch (error: any) {
       console.error("Upload failed:", error);
       if (fs.existsSync(req.file?.path)) fs.unlinkSync(req.file.path);
