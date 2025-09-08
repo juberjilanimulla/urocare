@@ -1,14 +1,14 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IReferralDoctor {
-  _id: string;
+  _id: Types.ObjectId;
   name?: string;
   mobile?: string;
   area?: string;
 }
 // ---------------- Interface ---------------- //
 export interface IPatient extends Document {
-  _id: string;
+  _id: Types.ObjectId;
   name?: string;
   sex?: string;
   age?: string;

@@ -1,8 +1,8 @@
-import { Schema, model, Document } from "mongoose";
+import { Schema, model, Document,Types } from "mongoose";
 
 // ---------------- Interface ---------------- //
 export interface IDoctor extends Document {
-  _id: string;
+  _id: Types.ObjectId
   name: string;
   mobile: string;
   email: string;

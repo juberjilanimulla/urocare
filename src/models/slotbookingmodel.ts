@@ -1,8 +1,8 @@
-import mongoose, { Schema, Document, model } from "mongoose";
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 
 //  Define interface for SlotBooking
 export interface ISlotBooking extends Document {
-  _id:String,
+  _id: Types.ObjectId;
   doctorid: mongoose.Types.ObjectId;
   date: Date;
   starttime: string;
