@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, model } from "mongoose";
 
 // 1Define the TypeScript interface for appointment
 export interface IAppointment extends Document {
+  _id: string;
   patientname?: string;
   patientmobile?: string;
   patientemail?: string;

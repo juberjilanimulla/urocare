@@ -1,12 +1,14 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface IReferralDoctor {
+  _id: string;
   name?: string;
   mobile?: string;
   area?: string;
 }
 // ---------------- Interface ---------------- //
 export interface IPatient extends Document {
+  _id: string;
   name?: string;
   sex?: string;
   age?: string;

@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, model } from "mongoose";
 
 //  Define the TypeScript interface for Payment
 export interface IPayment extends Document {
+  _id:String,
   appointmentid: mongoose.Types.ObjectId;
   doctorid: mongoose.Types.ObjectId;
   amount?: number;

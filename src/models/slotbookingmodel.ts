@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, model } from "mongoose";
 
 //  Define interface for SlotBooking
 export interface ISlotBooking extends Document {
+  _id:String,
   doctorid: mongoose.Types.ObjectId;
   date: Date;
   starttime: string;
