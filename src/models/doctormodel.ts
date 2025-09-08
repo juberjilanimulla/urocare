@@ -2,7 +2,7 @@ import { Schema, model, Document,Types } from "mongoose";
 
 // ---------------- Interface ---------------- //
 export interface IDoctor extends Document {
-  _id: Types.ObjectId
+ 
   name: string;
   mobile: string;
   email: string;
