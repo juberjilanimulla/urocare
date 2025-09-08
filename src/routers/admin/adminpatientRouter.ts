@@ -1,15 +1,84 @@
 import { Router, Request, Response } from "express";
 import patientmodel, { IPatient } from "../../models/patientmodel";
 import { successResponse, errorResponse } from "../../helpers/serverResponse";
+import { SortOrder, Mongoose } from "mongoose";
 
 const adminpatientRouter = Router();
 
+adminpatientRouter.post("/getall", getallpatientHandler);
 adminpatientRouter.post("/create", createpatientHandler);
 adminpatientRouter.put("/update/:id", updatepatientHandler);
-adminpatientRouter.delete("/delete/:id", deletepatientHandler);
+adminpatientRouter.delete("/delete", deletepatientHandler);
 
 export default adminpatientRouter;
 
+async function getallpatientHandler(req: Request, res: Response) {
+  try {
+    const {
+      pageno = 0,
+      filterBy = {},
+      sortby = {},
+      search = "",
+    }: {
+      pageno?: number;
+      filterBy?: Record<string, any>;
+      sortby?: Record<string, "asc" | "desc">;
+      search?: string;
+    } = req.body;
+
+    const limit = 10;
+    const skip = pageno * limit;
+
+    let query: any = { $and: [] };
+
+    // Apply filters
+    if (filterBy && Object.keys(filterBy).length > 0) {
+      Object.keys(filterBy).forEach((key) => {
+        if (filterBy[key] !== undefined) {
+          query.$and.push({ [key]: filterBy[key] });
+        }
+      });
+    }
+
+    // Apply search
+    if (search.trim()) {
+      const searchRegex = new RegExp("\\b" + search.trim(), "i");
+      const searchConditions = [
+        { name: { $regex: searchRegex } },
+        { email: { $regex: searchRegex } },
+        { mobile: { $regex: searchRegex } },
+      ];
+      query.$and.push({ $or: searchConditions });
+    }
+
+    if (query.$and.length === 0) {
+      query = {};
+    }
+
+    // Sorting logic
+    const sortBy: Record<string, SortOrder> =
+      Object.keys(sortby).length !== 0
+        ? Object.keys(sortby).reduce<Record<string, SortOrder>>((acc, key) => {
+            acc[key] = sortby[key] === "asc" ? 1 : -1;
+            return acc;
+          }, {})
+        : { createdAt: -1 };
+
+    const patient: IPatient[] = await patientmodel
+      .find(query)
+      .sort(sortBy)
+      .skip(skip)
+      .limit(limit);
+
+    const totalCount = await patientmodel.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    successResponse(res, "Success", { patient, totalPages });
+  } catch (error) {
+    console.log("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
 
 async function createpatientHandler(req: Request, res: Response) {
   try {
@@ -162,7 +231,7 @@ async function deletepatientHandler(req: Request, res: Response) {
       return;
     }
 
-    await patientmodel.findByIdAndDelete(_id);
+    const patient = await patientmodel.findByIdAndDelete(_id);
 
     successResponse(res, "successfully deleted");
   } catch (error) {
