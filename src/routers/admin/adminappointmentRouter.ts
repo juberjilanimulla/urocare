@@ -141,15 +141,7 @@ async function admincreateappointmentHandler(req: Request, res: Response) {
     }: Partial<IAppointment> & { slotid?: string; patientid: string } =
       req.body;
 
-    if (
-      !patientid ||
-      !doctorid ||
-      !date ||
-      !slotid ||
-      !starttime ||
-      !endtime ||
-      !slottype
-    ) {
+    if (!patientid || !doctorid || !date || !slotid || !starttime || !endtime) {
       return errorResponse(res, 400, "Some params are missing");
     }
 
@@ -184,7 +176,7 @@ async function admincreateappointmentHandler(req: Request, res: Response) {
       slotid,
       starttime: starttime.trim(),
       endtime: endtime.trim(),
-      slottype,
+      slottype: "offline",
       price: price || 700,
       status: "confirmed",
       paymentstatus: "paid",
