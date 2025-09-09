@@ -1,15 +1,15 @@
-import mongoose, { Schema, Document, model,Types } from "mongoose";
+import mongoose, { Schema, Document, model, Types } from "mongoose";
 
 //  Define the TypeScript interface for Payment
 export interface IPayment extends Document {
- 
   appointmentid: mongoose.Types.ObjectId;
   doctorid: mongoose.Types.ObjectId;
+  patientid: mongoose.Types.ObjectId;
   amount?: number;
   paymentstatus: "created" | "pending" | "paid" | "failed" | "refunded";
   orderid?: string;
   paymentid?: string;
-  razorpay_payment_id:string,
+  razorpay_payment_id: string;
   signature?: string;
   method?: string; // card, UPI, netbanking, wallet, etc.
   errormessage?: string;
@@ -26,6 +26,7 @@ const paymentschema = new Schema<IPayment>(
       ref: "appointment",
       required: true,
     },
+    patientid: { type: Schema.Types.ObjectId, ref: "patient" },
     doctorid: { type: Schema.Types.ObjectId, ref: "doctor", required: true },
     amount: { type: Number },
     paymentstatus: {
@@ -35,7 +36,7 @@ const paymentschema = new Schema<IPayment>(
     },
     orderid: { type: String },
     paymentid: { type: String },
-    razorpay_payment_id:{type:String},
+    razorpay_payment_id: { type: String },
     signature: { type: String },
     method: { type: String },
     errormessage: { type: String },

@@ -71,6 +71,7 @@ async function getallpaymentHandler(
         "appointmentid",
         "patientname patientemail patientmobile date starttime endtime status"
       )
+      .populate("patientid", "name email mobile")
       .populate("doctorid", "name specialization")
       .sort(sortBy)
       .skip(skip)
@@ -120,21 +121,23 @@ async function admincreatepaymentHandler(req: Request, res: Response) {
   try {
     const {
       appointmentid,
+      patientid,
       amount,
       method, // "cash" | "upi" | "card"
       message,
     }: {
       appointmentid?: string;
+      patientid?: string;
       amount?: number;
       method?: string;
       message?: string;
     } = req.body;
 
-    if (!appointmentid || !amount || !method) {
+    if (!appointmentid || !amount || !patientid) {
       return errorResponse(
         res,
         400,
-        "appointmentid, amount and method are required"
+        "appointmentid, amount and patientid are required"
       );
     }
 
@@ -146,11 +149,12 @@ async function admincreatepaymentHandler(req: Request, res: Response) {
     // Create offline payment entry
     const payment = await paymentmodel.create({
       appointmentid,
+      patientid,
       doctorid: appointment.doctorid,
       userid: appointment.patientid,
       amount,
       paymentstatus: "paid",
-      method: method, // cash/upi/card
+      method: "cash", // cash/upi/card
       message: message || "Offline payment at reception",
       paidAt: new Date(),
     });
