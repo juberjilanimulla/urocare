@@ -9,6 +9,7 @@ export interface IPayment extends Document {
   paymentstatus: "created" | "pending" | "paid" | "failed" | "refunded";
   orderid?: string;
   paymentid?: string;
+  razorpay_payment_id:string,
   signature?: string;
   method?: string; // card, UPI, netbanking, wallet, etc.
   errormessage?: string;
@@ -34,6 +35,7 @@ const paymentschema = new Schema<IPayment>(
     },
     orderid: { type: String },
     paymentid: { type: String },
+    razorpay_payment_id:{type:String},
     signature: { type: String },
     method: { type: String },
     errormessage: { type: String },

@@ -25,16 +25,18 @@ interface RazorpayOrderRequest {
   currency: string;
   receipt: string;
   notes?: Record<string, string>;
+  method?: string;
 }
 
 async function createorderHandler(req: Request, res: Response) {
   try {
-    const { appointmentid, amount } = req.body as {
+    const { appointmentid, amount, method } = req.body as {
       appointmentid?: string;
       amount?: number;
+      method?: string;
     };
 
-    if (!appointmentid || !amount) {
+    if (!appointmentid || !amount || method) {
       return errorResponse(res, 400, "appointmentid and amount are required");
     }
 
@@ -62,6 +64,7 @@ async function createorderHandler(req: Request, res: Response) {
       amount,
       orderid: order.id,
       paymentstatus: "created",
+      method,
     });
 
     successResponse(res, "Order created", {
@@ -97,7 +100,14 @@ async function verifypaymentHandler(req: Request, res: Response) {
     if (generatedSignature !== signature) {
       return errorResponse(res, 400, "Invalid payment signature");
     }
+    const razorpayInstance = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID as string,
+      key_secret: process.env.RAZORPAY_KEY_SECRET as string,
+    });
 
+    // Fetch payment details from Razorpay
+    const paymentDetails = await razorpayInstance.payments.fetch(paymentid);
+    const actualMethod: string = paymentDetails.method;
     // Update appointment
     await appointmentmodel.findByIdAndUpdate(appointmentid, {
       status: "confirmed",
@@ -110,6 +120,7 @@ async function verifypaymentHandler(req: Request, res: Response) {
       {
         paymentid,
         signature,
+        method: actualMethod,
         paymentstatus: "paid",
         paidAt: new Date(),
       },

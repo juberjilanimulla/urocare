@@ -2,7 +2,6 @@ import mongoose, { Schema, Document, model, Types } from "mongoose";
 
 // 1Define the TypeScript interface for appointment
 export interface IAppointment extends Document {
- 
   patientname?: string;
   patientmobile?: string;
   patientemail?: string;
@@ -14,6 +13,7 @@ export interface IAppointment extends Document {
   slottype: "online" | "offline";
   status: "pending" | "confirmed" | "cancelled";
   paymentstatus: "unpaid" | "paid";
+  paymenttype: "";
   price: { type: number; default: 700 };
   createdAt?: Date;
   updatedAt?: Date;
@@ -41,6 +41,7 @@ const appointmentschema = new Schema<IAppointment>(
       enum: ["unpaid", "paid"],
       default: "unpaid",
     },
+    paymenttype: String,
     price: { type: Number, default: 700 },
   },
   { timestamps: true, versionKey: false }
