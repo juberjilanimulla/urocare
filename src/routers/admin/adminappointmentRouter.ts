@@ -95,6 +95,7 @@ async function getallappointmentHandler(req: Request, res: Response) {
     const appointment = await appointmentmodel
       .find(query)
       .populate("doctorid", "name specialization")
+      .populate("patientid", "name email mobile")
       .sort(sortBy)
       .skip(skip)
       .limit(limit);
@@ -183,7 +184,12 @@ async function admincreateappointmentHandler(req: Request, res: Response) {
       paymenttype: "cash",
     });
 
-    successResponse(res, "Appointment created", appointment);
+    // Fetch appointment with patient details
+    const populatedAppointment = await appointmentmodel
+      .findById(appointment._id)
+      .populate("patientid", " name email mobile"); // adjust fields
+
+    return successResponse(res, "Appointment created", populatedAppointment);
   } catch (error) {
     console.log("error", error);
     errorResponse(res, 500, "internal server error");

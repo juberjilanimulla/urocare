@@ -2,11 +2,13 @@ import { Router, Request, Response } from "express";
 import { SortOrder } from "mongoose";
 import paymentmodel from "../../models/paymentmodel";
 import { successResponse, errorResponse } from "../../helpers/serverResponse";
+import appointmentmodel from "../../models/appointmentmodel";
 
 const adminpaymentRouter = Router();
 
 adminpaymentRouter.post("/getall", getallpaymentHandler);
 adminpaymentRouter.delete("/delete", deletepaymentHandler);
+adminpaymentRouter.post("/create", admincreatepaymentHandler);
 
 export default adminpaymentRouter;
 
@@ -110,6 +112,61 @@ async function deletepaymentHandler(
     successResponse(res, "successfully deleted");
   } catch (error) {
     console.error("deletepaymentHandler error:", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function admincreatepaymentHandler(req: Request, res: Response) {
+  try {
+    const {
+      appointmentid,
+      amount,
+      method, // "cash" | "upi" | "card"
+      message,
+    }: {
+      appointmentid?: string;
+      amount?: number;
+      method?: string;
+      message?: string;
+    } = req.body;
+
+    if (!appointmentid || !amount || !method) {
+      return errorResponse(
+        res,
+        400,
+        "appointmentid, amount and method are required"
+      );
+    }
+
+    const appointment = await appointmentmodel.findById(appointmentid);
+    if (!appointment) {
+      return errorResponse(res, 404, "Appointment not found");
+    }
+
+    // Create offline payment entry
+    const payment = await paymentmodel.create({
+      appointmentid,
+      doctorid: appointment.doctorid,
+      userid: appointment.patientid,
+      amount,
+      paymentstatus: "paid",
+      paymentmode: method, // cash/upi/card
+      message: message || "Offline payment at reception",
+      paidAt: new Date(),
+    });
+
+    // Update appointment status
+    appointment.paymentstatus = "paid";
+    appointment.status = "confirmed";
+    await appointment.save();
+
+    return successResponse(
+      res,
+      "Offline payment recorded successfully",
+      payment
+    );
+  } catch (error) {
+    console.log("error", error);
     errorResponse(res, 500, "internal server error");
   }
 }
