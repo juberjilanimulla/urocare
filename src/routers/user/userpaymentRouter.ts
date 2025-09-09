@@ -112,6 +112,7 @@ async function verifypaymentHandler(req: Request, res: Response) {
     await appointmentmodel.findByIdAndUpdate(appointmentid, {
       status: "confirmed",
       paymentstatus: "paid",
+      paymenttype: actualMethod,
     });
 
     // Update payment

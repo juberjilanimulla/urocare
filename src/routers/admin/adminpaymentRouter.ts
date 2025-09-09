@@ -150,12 +150,13 @@ async function admincreatepaymentHandler(req: Request, res: Response) {
       userid: appointment.patientid,
       amount,
       paymentstatus: "paid",
-      paymentmode: method, // cash/upi/card
+      method: method, // cash/upi/card
       message: message || "Offline payment at reception",
       paidAt: new Date(),
     });
 
     // Update appointment status
+    appointment.paymenttype = "cash";
     appointment.paymentstatus = "paid";
     appointment.status = "confirmed";
     await appointment.save();
