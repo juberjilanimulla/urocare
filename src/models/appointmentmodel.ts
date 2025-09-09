@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, model, Types } from "mongoose";
 
 // 1Define the TypeScript interface for appointment
 export interface IAppointment extends Document {
+  patientid: mongoose.Types.ObjectId;
   patientname?: string;
   patientmobile?: string;
   patientemail?: string;
@@ -22,6 +23,7 @@ export interface IAppointment extends Document {
 // Define Schema
 const appointmentschema = new Schema<IAppointment>(
   {
+    patientid: { type: Schema.Types.ObjectId, ref: "patient" },
     patientname: { type: String },
     patientmobile: { type: String },
     patientemail: { type: String },

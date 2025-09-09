@@ -1,12 +1,14 @@
 import { Router, Request, Response } from "express";
 import { errorResponse, successResponse } from "../../helpers/serverResponse";
-import appointmentmodel from "../../models/appointmentmodel";
+import appointmentmodel, { IAppointment } from "../../models/appointmentmodel";
 import { Types, SortOrder } from "mongoose";
+import slotbookingmodel, { ISlotBooking } from "../../models/slotbookingmodel";
 
 const adminappointmentRouter = Router();
 
 adminappointmentRouter.post("/getall", getallappointmentHandler);
 adminappointmentRouter.delete("/delete", deleteappointmentHandler);
+adminappointmentRouter.post("/create", admincreateappointmentHandler);
 
 export default adminappointmentRouter;
 
@@ -121,6 +123,77 @@ async function deleteappointmentHandler(req: Request, res: Response) {
     return successResponse(res, "Successfully deleted");
   } catch (error) {
     console.error("error", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function admincreateappointmentHandler(req: Request, res: Response) {
+  try {
+    const {
+      patientid,
+      doctorid,
+      date,
+      slotid,
+      starttime,
+      endtime,
+      slottype,
+      price,
+    }: Partial<IAppointment> & { slotid?: string; patientid: string } =
+      req.body;
+
+    if (
+      !patientid ||
+      !doctorid ||
+      !date ||
+      !slotid ||
+      !starttime ||
+      !endtime ||
+      !slottype
+    ) {
+      return errorResponse(res, 400, "Some params are missing");
+    }
+
+    // Check if slot exists
+    const slot: ISlotBooking | null = await slotbookingmodel.findOne({
+      _id: slotid,
+      doctorid,
+      date,
+    });
+
+    if (!slot) {
+      return errorResponse(res, 404, "Slot not found for doctor");
+    }
+
+    // Check if appointment already exists for this slot
+    const alreadyBooked = await appointmentmodel.findOne({
+      date: new Date(date),
+      starttime: starttime.trim(),
+      endtime: endtime.trim(),
+      status: { $in: ["pending", "confirmed"] },
+    });
+
+    if (alreadyBooked) {
+      return errorResponse(res, 400, "This slot is already booked");
+    }
+
+    // Create appointment with pending + unpaid
+    const appointment = await appointmentmodel.create({
+      patientid,
+      doctorid,
+      date,
+      slotid,
+      starttime: starttime.trim(),
+      endtime: endtime.trim(),
+      slottype,
+      price: price || 700,
+      status: "confirmed",
+      paymentstatus: "paid",
+      paymenttype: "cash",
+    });
+
+    successResponse(res, "Appointment created", appointment);
+  } catch (error) {
+    console.log("error", error);
     errorResponse(res, 500, "internal server error");
   }
 }
