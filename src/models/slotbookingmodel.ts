@@ -37,7 +37,7 @@ const slotbookingschema = new Schema<ISlotBooking>(
       enum: ["online", "offline"],
       required: true,
     },
-    slottimerange: { type: String },
+    slottimerange: { type: String, default: "" },
     breaks: [
       {
         breakstart: { type: String },
