@@ -104,16 +104,50 @@ async function createslotbookingHandler(req: Request, res: Response) {
         }
       }
     }
-    const existingSlot = await slotbookingmodel.findOne({
+
+    const newStart = new Date(`${date}T${starttime}`);
+    const newEnd = new Date(`${date}T${endtime}`);
+
+    if (newStart >= newEnd) {
+      return errorResponse(res, 400, "End time must be after start time");
+    }
+
+    // Check for overlapping slots
+    const overlappingSlot = await slotbookingmodel.findOne({
       doctorid,
       date,
-      starttime,
-      endtime,
+      $expr: {
+        $and: [
+          {
+            $lt: [
+              {
+                $dateFromString: {
+                  dateString: { $concat: ["$date", "T", "$endtime"] },
+                },
+              },
+              newEnd,
+            ],
+          },
+          {
+            $gt: [
+              {
+                $dateFromString: {
+                  dateString: { $concat: ["$date", "T", "$starttime"] },
+                },
+              },
+              newStart,
+            ],
+          },
+        ],
+      },
     });
 
-    if (existingSlot) {
-      errorResponse(res, 400, "This slot already exists for the doctor");
-      return;
+    if (overlappingSlot) {
+      return errorResponse(
+        res,
+        400,
+        "This slot overlaps with another existing slot for the doctor"
+      );
     }
 
     const params = { doctorid, date, starttime, endtime, slottype, breaks };
