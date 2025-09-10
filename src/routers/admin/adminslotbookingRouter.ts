@@ -72,7 +72,7 @@ async function getslotbookingHandler(
       .skip(skip)
       .limit(limit);
 
-  const slotbooking = slotbookingDocs.map((doc) => {
+    const slotbooking = slotbookingDocs.map((doc) => {
       const obj = doc.toObject();
       return {
         ...obj,
@@ -158,20 +158,6 @@ async function updateslotbookingHandler(req: Request, res: Response) {
       errorResponse(res, 400, "Some params are missing");
       return;
     }
-    // Validate breaks if provided
-    if (breaks && Array.isArray(breaks)) {
-      for (const b of breaks) {
-        if (!b.breakstart || !b.breakend) {
-          return errorResponse(
-            res,
-            400,
-            "Each break must have breakstart and breakend"
-          );
-        }
-      }
-    }
-
-    // Check if another slot exists with same doctor/date/time
     // Build new DateTimes
     const newStart = new Date(`${date}T${starttime}:00`);
     const newEnd = new Date(`${date}T${endtime}:00`);
@@ -185,6 +171,51 @@ async function updateslotbookingHandler(req: Request, res: Response) {
     }
     if (newStart >= newEnd) {
       return errorResponse(res, 400, "End time must be after start time");
+    }
+
+    // Validate breaks if provided
+    if (breaks && Array.isArray(breaks)) {
+      const parsedBreaks: { start: Date; end: Date }[] = [];
+      for (const b of breaks) {
+        if (!b.breakstart || !b.breakend) {
+          return errorResponse(
+            res,
+            400,
+            "Each break must have breakstart and breakend"
+          );
+        }
+
+        const breakStart = new Date(`${date}T${b.breakstart}`);
+        const breakEnd = new Date(`${date}T${b.breakend}`);
+
+        if (isNaN(breakStart.getTime()) || isNaN(breakEnd.getTime())) {
+          return errorResponse(
+            res,
+            400,
+            "Invalid break time format. Use HH:mm (24h)"
+          );
+        }
+
+        if (breakStart >= breakEnd) {
+          return errorResponse(res, 400, "Break end must be after break start");
+        }
+
+        if (breakStart < newStart || breakEnd > newEnd) {
+          return errorResponse(
+            res,
+            400,
+            "Breaks must be within slot start and end time"
+          );
+        }
+
+        for (const pb of parsedBreaks) {
+          if (breakStart < pb.end && breakEnd > pb.start) {
+            return errorResponse(res, 400, "Breaks cannot overlap each other");
+          }
+        }
+
+        parsedBreaks.push({ start: breakStart, end: breakEnd });
+      }
     }
 
     // Check for overlaps (ignore current slot)
@@ -217,13 +248,7 @@ async function updateslotbookingHandler(req: Request, res: Response) {
       return errorResponse(res, 500, "Failed to update slot");
     }
 
-    const responseData = {
-      ...updatedSlot.toObject(),
-      startDateTimeIST: toIST(updatedSlot.startDateTime),
-      endDateTimeIST: toIST(updatedSlot.endDateTime),
-    };
-
-    return successResponse(res, "Successfully updated", responseData);
+    return successResponse(res, "Successfully updated", updatedSlot);
   } catch (error) {
     console.error("updateslotbookingHandler error:", error);
     errorResponse(res, 500, "internal server error");
@@ -270,8 +295,16 @@ async function createslotbookingHandler(req: Request, res: Response) {
       return errorResponse(res, 400, "Some params are missing");
     }
 
-    // validate breaks
+    // combine into DateTime
+    const newStart = new Date(`${date}T${starttime}`);
+    const newEnd = new Date(`${date}T${endtime}`);
+
+    if (newStart >= newEnd) {
+      return errorResponse(res, 400, "End time must be after start time");
+    }
+    // Validate breaks
     if (breaks && Array.isArray(breaks)) {
+      const parsedBreaks: { start: Date; end: Date }[] = [];
       for (const b of breaks) {
         if (!b.breakstart || !b.breakend) {
           return errorResponse(
@@ -280,15 +313,38 @@ async function createslotbookingHandler(req: Request, res: Response) {
             "Each break must have breakstart and breakend"
           );
         }
+
+        const breakStart = new Date(`${date}T${b.breakstart}`);
+        const breakEnd = new Date(`${date}T${b.breakend}`);
+
+        if (isNaN(breakStart.getTime()) || isNaN(breakEnd.getTime())) {
+          return errorResponse(
+            res,
+            400,
+            "Invalid break time format. Use HH:mm (24h)"
+          );
+        }
+
+        if (breakStart >= breakEnd) {
+          return errorResponse(res, 400, "Break end must be after break start");
+        }
+
+        if (breakStart < newStart || breakEnd > newEnd) {
+          return errorResponse(
+            res,
+            400,
+            "Breaks must be within slot start and end time"
+          );
+        }
+
+        for (const pb of parsedBreaks) {
+          if (breakStart < pb.end && breakEnd > pb.start) {
+            return errorResponse(res, 400, "Breaks cannot overlap each other");
+          }
+        }
+
+        parsedBreaks.push({ start: breakStart, end: breakEnd });
       }
-    }
-
-    // combine into DateTime
-    const newStart = new Date(`${date}T${starttime}`);
-    const newEnd = new Date(`${date}T${endtime}`);
-
-    if (newStart >= newEnd) {
-      return errorResponse(res, 400, "End time must be after start time");
     }
 
     // overlap check using startDateTime & endDateTime
@@ -317,13 +373,7 @@ async function createslotbookingHandler(req: Request, res: Response) {
       breaks,
     });
 
-    const responseData = {
-      ...slotbooking.toObject(),
-      startDateTimeIST: toIST(slotbooking.startDateTime),
-      endDateTimeIST: toIST(slotbooking.endDateTime),
-    };
-
-    return successResponse(res, "Slot created successfully", responseData);
+    return successResponse(res, "Slot created successfully", slotbooking);
   } catch (error) {
     console.error("createslotbookingHandler error:", error);
     return errorResponse(res, 500, "Internal server error");
