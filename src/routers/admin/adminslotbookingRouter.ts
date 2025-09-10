@@ -66,11 +66,20 @@ async function getslotbookingHandler(
         : { createdAt: -1 };
 
     // Fetch paginated slotbooking
-    const slotbooking = await slotbookingmodel
+    const slotbookingDocs = await slotbookingmodel
       .find(query)
       .sort(sortBy)
       .skip(skip)
       .limit(limit);
+
+  const slotbooking = slotbookingDocs.map((doc) => {
+      const obj = doc.toObject();
+      return {
+        ...obj,
+        startDateTimeIST: toIST(doc.startDateTime),
+        endDateTimeIST: toIST(doc.endDateTime),
+      };
+    });
 
     const totalCount = await slotbookingmodel.countDocuments(query);
     const totalPages = Math.ceil(totalCount / limit);
@@ -163,28 +172,58 @@ async function updateslotbookingHandler(req: Request, res: Response) {
     }
 
     // Check if another slot exists with same doctor/date/time
-    const duplicateSlot = await slotbookingmodel.findOne({
+    // Build new DateTimes
+    const newStart = new Date(`${date}T${starttime}:00`);
+    const newEnd = new Date(`${date}T${endtime}:00`);
+
+    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
+      return errorResponse(
+        res,
+        400,
+        "Invalid date or time format. Use YYYY-MM-DD for date and HH:mm"
+      );
+    }
+    if (newStart >= newEnd) {
+      return errorResponse(res, 400, "End time must be after start time");
+    }
+
+    // Check for overlaps (ignore current slot)
+    const overlappingSlot = await slotbookingmodel.findOne({
       doctorid,
-      date,
-      starttime,
-      endtime,
-      _id: { $ne: _id }, // exclude current slot
+      _id: { $ne: _id },
+      $or: [{ startDateTime: { $lt: newEnd }, endDateTime: { $gt: newStart } }],
     });
 
-    if (duplicateSlot) {
-      errorResponse(res, 400, "This slot is already booked for the doctor");
-      return;
+    if (overlappingSlot) {
+      return errorResponse(
+        res,
+        400,
+        "This slot overlaps with another existing slot for the doctor"
+      );
     }
 
     // Update slot booking
-    const options = { new: true };
-    const slotbooking = await slotbookingmodel.findByIdAndUpdate(
+    const updatedSlot = await slotbookingmodel.findByIdAndUpdate(
       _id,
-      updatedData,
-      options
+      {
+        ...updatedData,
+        startDateTime: newStart,
+        endDateTime: newEnd,
+      },
+      { new: true }
     );
 
-    successResponse(res, "Successfully updated", slotbooking);
+    if (!updatedSlot) {
+      return errorResponse(res, 500, "Failed to update slot");
+    }
+
+    const responseData = {
+      ...updatedSlot.toObject(),
+      startDateTimeIST: toIST(updatedSlot.startDateTime),
+      endDateTimeIST: toIST(updatedSlot.endDateTime),
+    };
+
+    return successResponse(res, "Successfully updated", responseData);
   } catch (error) {
     console.error("updateslotbookingHandler error:", error);
     errorResponse(res, 500, "internal server error");
@@ -277,11 +316,13 @@ async function createslotbookingHandler(req: Request, res: Response) {
       slottype,
       breaks,
     });
+
     const responseData = {
       ...slotbooking.toObject(),
       startDateTimeIST: toIST(slotbooking.startDateTime),
       endDateTimeIST: toIST(slotbooking.endDateTime),
     };
+
     return successResponse(res, "Slot created successfully", responseData);
   } catch (error) {
     console.error("createslotbookingHandler error:", error);

@@ -143,3 +143,9 @@ export function toIST(date: Date): string {
   const istDate = new Date(date.getTime() + istOffset);
   return istDate.toISOString().replace("Z", "+05:30");
 }
+
+export function indiantime(date: Date) {
+  const now = new Date();
+  const offset = 5.5 * 60 * 60 * 1000; // IST offset
+  new Date(now.getTime() + offset);
+}
