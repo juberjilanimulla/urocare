@@ -151,8 +151,15 @@ async function updateslotbookingHandler(req: Request, res: Response) {
       return;
     }
 
-    const { doctorid, date, starttime, endtime, slottype, breaks } =
-      updatedData;
+    const {
+      doctorid,
+      date,
+      starttime,
+      endtime,
+      slottype,
+      breaks,
+      slottimerange,
+    } = updatedData;
 
     if (!doctorid || !date || !starttime || !endtime) {
       errorResponse(res, 400, "Some params are missing");
@@ -289,7 +296,15 @@ async function deleteslotbookingHandler(
 
 async function createslotbookingHandler(req: Request, res: Response) {
   try {
-    const { doctorid, date, starttime, endtime, slottype, breaks } = req.body;
+    const {
+      doctorid,
+      date,
+      starttime,
+      endtime,
+      slottype,
+      breaks,
+      slottimerange,
+    } = req.body;
 
     if (!doctorid || !date || !starttime || !endtime) {
       return errorResponse(res, 400, "Some params are missing");
@@ -371,6 +386,7 @@ async function createslotbookingHandler(req: Request, res: Response) {
       endDateTime: newEnd,
       slottype,
       breaks,
+      slottimerange,
     });
 
     return successResponse(res, "Slot created successfully", slotbooking);
