@@ -329,8 +329,8 @@ async function createslotbookingHandler(req: Request, res: Response) {
           );
         }
 
-        const breakStart = new Date(`${date}T${b.breakstart}`);
-        const breakEnd = new Date(`${date}T${b.breakend}`);
+        const breakStart = new Date(`${date}T${b.breakstart}:00`);
+        const breakEnd = new Date(`${date}T${b.breakend}:00`);
 
         if (isNaN(breakStart.getTime()) || isNaN(breakEnd.getTime())) {
           return errorResponse(
