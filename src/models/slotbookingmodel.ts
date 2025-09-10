@@ -7,9 +7,11 @@ interface Break {
 }
 export interface ISlotBooking extends Document {
   doctorid: mongoose.Types.ObjectId;
-  date?: string;
+  date: string;
   starttime: string;
   endtime: string;
+  startDateTime: Date; // combined date+time
+  endDateTime: Date;
   slottype: "online" | "offline";
   createdAt?: Date;
   updatedAt?: Date;
@@ -24,12 +26,15 @@ const slotbookingschema = new Schema<ISlotBooking>(
       ref: "doctor",
       required: true,
     },
-    date: { type: String },
-    starttime: { type: String },
-    endtime: { type: String },
+    date: { type: String, required: true },
+    starttime: { type: String, required: true },
+    endtime: { type: String, required: true },
+    startDateTime: { type: Date, required: true },
+    endDateTime: { type: Date, required: true },
     slottype: {
       type: String,
       enum: ["online", "offline"],
+      required: true,
     },
     breaks: [
       {
