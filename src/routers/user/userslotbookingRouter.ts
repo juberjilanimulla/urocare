@@ -28,7 +28,7 @@ async function getuserslotbookingHandler(
     // Fetch slot availability (doctor added ranges like 10:00–18:00)
     const slots: ISlotBooking[] = await slotbookingmodel.find({
       doctorid,
-      date: new Date(date),
+      date: date,
     });
 
     if (!slots || slots.length === 0) {
@@ -39,7 +39,7 @@ async function getuserslotbookingHandler(
     // Fetch already booked appointments for the same doctor/date
     const bookedAppointments: IAppointment[] = await appointmentmodel.find({
       doctorid,
-      date: new Date(date),
+      date: date,
       status: { $in: ["pending", "confirmed"] }, // pending (in 7 min hold) or confirmed
     });
 
