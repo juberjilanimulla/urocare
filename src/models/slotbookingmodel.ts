@@ -1,6 +1,10 @@
 import mongoose, { Schema, Document, model, Types } from "mongoose";
 
 //  Define interface for SlotBooking
+interface Break {
+  breakstart: string;
+  breakend: string;
+}
 export interface ISlotBooking extends Document {
   doctorid: mongoose.Types.ObjectId;
   date: Date;
@@ -9,10 +13,7 @@ export interface ISlotBooking extends Document {
   slottype: "online" | "offline";
   createdAt?: Date;
   updatedAt?: Date;
-  breaks?: {
-    breakstart: string;
-    breakend: string;
-  }[];
+  breaks?: Break[];
 }
 
 //  Define schema

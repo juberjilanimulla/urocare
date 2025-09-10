@@ -1,5 +1,5 @@
 import { Router, Request, Response } from "express";
-import { SortOrder } from "mongoose";
+import { SortOrder, Mongoose } from "mongoose";
 import slotbookingmodel from "../../models/slotbookingmodel";
 import appointmentmodel from "../../models/appointmentmodel";
 import { successResponse, errorResponse } from "../../helpers/serverResponse";
