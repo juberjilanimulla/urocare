@@ -154,7 +154,7 @@ async function updateslotbookingHandler(req: Request, res: Response) {
     const { doctorid, date, starttime, endtime, slottype, breaks } =
       updatedData;
 
-    if (!doctorid || !date || !starttime || !endtime || !slottype) {
+    if (!doctorid || !date || !starttime || !endtime) {
       errorResponse(res, 400, "Some params are missing");
       return;
     }
@@ -291,7 +291,7 @@ async function createslotbookingHandler(req: Request, res: Response) {
   try {
     const { doctorid, date, starttime, endtime, slottype, breaks } = req.body;
 
-    if (!doctorid || !date || !starttime || !endtime || !slottype) {
+    if (!doctorid || !date || !starttime || !endtime) {
       return errorResponse(res, 400, "Some params are missing");
     }
 

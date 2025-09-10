@@ -13,6 +13,7 @@ export interface ISlotBooking extends Document {
   startDateTime: Date; // combined date+time
   endDateTime: Date;
   slottype: "online" | "offline";
+  slottimerange: string;
   createdAt?: Date;
   updatedAt?: Date;
   breaks?: Break[];
@@ -36,6 +37,7 @@ const slotbookingschema = new Schema<ISlotBooking>(
       enum: ["online", "offline"],
       required: true,
     },
+    slottimerange: { type: String },
     breaks: [
       {
         breakstart: { type: String },
