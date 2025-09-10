@@ -55,6 +55,7 @@ async function getuserslotbookingHandler(
         endtime: slot.endtime,
         slottype: slot.slottype,
         breaks: slot.breaks || [],
+        slottimerange: slot.slottimerange,
         isBooked: bookedTimes.includes(slot.starttime), // add flag if booked
       };
     });
