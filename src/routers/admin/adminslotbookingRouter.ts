@@ -10,6 +10,7 @@ adminslotbookingRouter.post("/", getslotbookingHandler);
 adminslotbookingRouter.post("/create", createslotbookingHandler);
 adminslotbookingRouter.put("/update", updateslotbookingHandler);
 adminslotbookingRouter.delete("/delete", deleteslotbookingHandler);
+adminslotbookingRouter.post("/createbreak", createbreakslotbookingHandler);
 
 export default adminslotbookingRouter;
 
@@ -205,6 +206,47 @@ async function deleteslotbookingHandler(
     successResponse(res, "Slot deleted and related appointments cancelled");
   } catch (error) {
     console.error("deleteslotbookingHandler error:", error);
+    errorResponse(res, 500, "internal server error");
+  }
+}
+
+async function createbreakslotbookingHandler(req: Request, res: Response) {
+  try {
+    const { doctorid, date, breaks } = req.body;
+
+    if (!doctorid || !date || !breaks || !Array.isArray(breaks)) {
+      return errorResponse(res, 400, "doctorid, date and breaks are required");
+    }
+
+    // Ensure breaks contain valid objects
+    for (const b of breaks) {
+      if (!b.breakstart || !b.breakend) {
+        return errorResponse(
+          res,
+          400,
+          "Each break must have breakstart and breakend"
+        );
+      }
+    }
+
+    // Find slot for doctor & date
+    const slot = await slotbookingmodel.findOne({ doctorid, date });
+
+    if (!slot) {
+      return errorResponse(
+        res,
+        404,
+        "Slot not found for given doctor and date"
+      );
+    }
+
+    // Update breaks
+    slot.breaks = breaks;
+    await slot.save();
+
+    return successResponse(res, "Breaks updated successfully", slot);
+  } catch (error) {
+    console.log("error", error);
     errorResponse(res, 500, "internal server error");
   }
 }

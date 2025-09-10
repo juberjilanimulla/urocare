@@ -2,7 +2,6 @@ import mongoose, { Schema, Document, model, Types } from "mongoose";
 
 //  Define interface for SlotBooking
 export interface ISlotBooking extends Document {
-
   doctorid: mongoose.Types.ObjectId;
   date: Date;
   starttime: string;
@@ -10,6 +9,10 @@ export interface ISlotBooking extends Document {
   slottype: "online" | "offline";
   createdAt?: Date;
   updatedAt?: Date;
+  breaks?: {
+    breakstart: string;
+    breakend: string;
+  }[];
 }
 
 //  Define schema
@@ -28,6 +31,12 @@ const slotbookingschema = new Schema<ISlotBooking>(
       enum: ["online", "offline"],
       required: true,
     },
+    breaks: [
+      {
+        breakstart: { type: String },
+        breakend: { type: String },
+      },
+    ],
   },
   { timestamps: true, versionKey: false }
 );
