@@ -3,6 +3,7 @@ import { SortOrder } from "mongoose";
 import slotbookingmodel from "../../models/slotbookingmodel";
 import appointmentmodel from "../../models/appointmentmodel";
 import { successResponse, errorResponse } from "../../helpers/serverResponse";
+import { toIST } from "../../helpers/helperFunction";
 
 const adminslotbookingRouter = Router();
 
@@ -276,8 +277,12 @@ async function createslotbookingHandler(req: Request, res: Response) {
       slottype,
       breaks,
     });
-
-    return successResponse(res, "Slot created successfully", slotbooking);
+    const responseData = {
+      ...slotbooking.toObject(),
+      startDateTimeIST: toIST(slotbooking.startDateTime),
+      endDateTimeIST: toIST(slotbooking.endDateTime),
+    };
+    return successResponse(res, "Slot created successfully", responseData);
   } catch (error) {
     console.error("createslotbookingHandler error:", error);
     return errorResponse(res, 500, "Internal server error");

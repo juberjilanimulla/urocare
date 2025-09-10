@@ -136,3 +136,10 @@ export async function Admin(): Promise<void> {
     }
   }
 }
+
+export function toIST(date: Date): string {
+  // Convert UTC date to IST and return ISO-like string
+  const istOffset = 5.5 * 60 * 60 * 1000; // +5:30 in ms
+  const istDate = new Date(date.getTime() + istOffset);
+  return istDate.toISOString().replace("Z", "+05:30");
+}
