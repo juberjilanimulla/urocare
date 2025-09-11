@@ -116,6 +116,10 @@ async function createpatientHandler(req: Request, res: Response) {
     if (!name || !mobile) {
       return errorResponse(res, 400, "Name and Mobile are required");
     }
+    const existingmobile = await patientmodel.findOne({ mobile });
+    if (existingmobile) {
+      return errorResponse(res, 404, "already mobile is register");
+    }
 
     const formattedReferralDoctor = referraldoctor
       ? {
