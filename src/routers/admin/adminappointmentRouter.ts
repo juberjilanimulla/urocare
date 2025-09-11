@@ -146,6 +146,7 @@ async function admincreateappointmentHandler(req: Request, res: Response) {
       return errorResponse(res, 400, "Some params are missing");
     }
 
+  
     // Check if slot exists
     const slot: ISlotBooking | null = await slotbookingmodel.findOne({
       _id: slotid,

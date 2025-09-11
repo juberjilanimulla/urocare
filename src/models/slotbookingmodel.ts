@@ -30,8 +30,8 @@ const slotbookingschema = new Schema<ISlotBooking>(
     date: { type: String, required: true },
     starttime: { type: String, required: true },
     endtime: { type: String, required: true },
-    startDateTime: { type: Date, required: true },
-    endDateTime: { type: Date, required: true },
+    startDateTime: { type: Date },
+    endDateTime: { type: Date },
     slottype: {
       type: String,
       enum: ["online", "offline"],
