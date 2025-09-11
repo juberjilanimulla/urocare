@@ -57,14 +57,20 @@ async function getslotbookingHandler(
     }
 
     // Sorting logic
+    // const sortBy: Record<string, SortOrder> =
+    //   Object.keys(sortby).length !== 0
+    //     ? Object.keys(sortby).reduce<Record<string, SortOrder>>((acc, key) => {
+    //         acc[key] = sortby[key] === "asc" ? 1 : -1;
+    //         return acc;
+    //       }, {})
+    //     : { createdAt: -1 };
     const sortBy: Record<string, SortOrder> =
       Object.keys(sortby).length !== 0
         ? Object.keys(sortby).reduce<Record<string, SortOrder>>((acc, key) => {
             acc[key] = sortby[key] === "asc" ? 1 : -1;
             return acc;
           }, {})
-        : { createdAt: -1 };
-
+        : { date: -1 };
     // Fetch paginated slotbooking
     const slotbookingDocs = await slotbookingmodel
       .find(query)
