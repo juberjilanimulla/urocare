@@ -118,7 +118,7 @@ async function createpatientHandler(req: Request, res: Response) {
     }
     const existingmobile = await patientmodel.findOne({ mobile });
     if (existingmobile) {
-      return errorResponse(res, 404, "already mobile is register");
+      return errorResponse(res, 404, "Mobile number is already registered");
     }
 
     const formattedReferralDoctor = referraldoctor
