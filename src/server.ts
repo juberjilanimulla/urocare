@@ -41,9 +41,7 @@ app.use(
   cors({
     origin: [
       "https://raoofsurocare.vercel.app",
-      
-      "https://drkhizarraoof.com",
-      "https://drkhizarraoof.vercel.app",
+      "https://api.raoofsurocare.com",
       "http://localhost:3000",
       "http://localhost:5173",
       "http://localhost:5174",
